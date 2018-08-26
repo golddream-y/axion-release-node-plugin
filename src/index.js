@@ -2,7 +2,7 @@
  * @Author: erwin
  * @Date:   2018-08-25 20-08-61
  * @Last modified by:   erwin
- * @Last modified time: 2018-08-26 18-08-72
+ * @Last modified time: 2018-08-26 19-08-26
  */
 
 
@@ -15,8 +15,6 @@ const Bluebird = require(`bluebird`);
 const conventionalCommitsDetector = require(`conventional-commits-detector`);
 const debug = require(`debug`);
 const fs = require(`fs`);
-// const gitlabNotifier = require(`semantic-release-gitlab-notifier`);
-// const gitlabReleaser = require(`semantic-release-gitlab-releaser`);
 const getSemverTagInfo = Bluebird.promisify(require(`git-semver-tags-info`));
 const allSemverTag = Bluebird.promisify(require(`git-semver-tags`));
 const rawCommitsStream = require(`git-raw-commits`);
@@ -54,7 +52,7 @@ const getLastVersion = (tagInfo) => {
  * @return {[type]}
  */
 const debugAndReturn = (message, value) => {
-  console.log('log:', message, value);
+  // console.log('log:', message, value);
   console.debug(message, typeof value === 'string' ? value : JSON.stringify(value));
   return value;
 };
@@ -72,10 +70,6 @@ function axionRelease(packageOpts) {
     .then(_.partial(_.map, _, value => value.toString()))
     .then(_.partial(debugAndReturn, `commit messages - %O`, _))
     .then(commits => {
-      if (commits.length === 0) {
-        return debug(`no commits to release so skipping the other release steps`);
-      }
-
 
       const config = {
         data: {
@@ -119,7 +113,7 @@ function axionRelease(packageOpts) {
               console.log('semverIncrementVersion:', semverIncrementVersion);
               // 判断最后一次提交是否为tag行为，如果不是，则增加测试版本后缀
               if (latestCommitIsTag) {
-                return emverIncrementVersion;
+                return semverIncrementVersion;
               } else {
                 return semverIncrementVersion + '-' + TEST_PKG_WORD;
               }
