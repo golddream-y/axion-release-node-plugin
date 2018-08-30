@@ -1,8 +1,8 @@
 /**
  * @Author: erwin
  * @Date:   2018-08-25 20-08-61
- * @Last modified by:   erwin
- * @Last modified time: 2018-08-26 19-08-26
+ * @Last modified by:   Erwin
+ * @Last modified time: 2018-08-30 23-08-27
  */
 
 
@@ -23,11 +23,12 @@ const streamToArray = require(`stream-to-array`);
 const path = require(`path`);
 const semverIncrement = require(`shifted-semver-increment`);
 const shell = require(`shelljs`);
+const jsonFileOperator = require(`json-file-operator`);
 
 module.exports = axionRelease;
 
 
-const TEST_PKG_WORD = 'snapshots';
+const TEST_PKG_WORD = 'SNAPSHOT';
 
 /**
  * 获取最后一个tag的版本号
@@ -39,8 +40,8 @@ const getLastVersion = (tagInfo) => {
   let tagList = tagInfo.filter(item => item.isTag);
   debug('getLastVersion:', tagList);
   return {
-    'latestTag': tagList[0]['tag'],
-    'latestCommitIsTag': tagInfo[0]['isTag']
+    'latestTag': tagList.length ? tagList[0]['tag'] : '',
+    'latestCommitIsTag': tagList.length ? tagInfo[0]['isTag'] : false
   };
 };
 
@@ -52,7 +53,6 @@ const getLastVersion = (tagInfo) => {
  * @return {[type]}
  */
 const debugAndReturn = (message, value) => {
-  // console.log('log:', message, value);
   console.debug(message, typeof value === 'string' ? value : JSON.stringify(value));
   return value;
 };
@@ -109,7 +109,7 @@ function axionRelease(packageOpts) {
               latestTag,
               latestCommitIsTag
             }) => {
-              const semverIncrementVersion = latestTag === '' ? `1.0.0` : semverIncrement(latestTag, recommendation.releaseType);
+              const semverIncrementVersion = latestTag === '' ? `0.1.0` : semverIncrement(latestTag, recommendation.releaseType);
               console.log('semverIncrementVersion:', semverIncrementVersion);
               // 判断最后一次提交是否为tag行为，如果不是，则增加测试版本后缀
               if (latestCommitIsTag) {
@@ -119,6 +119,9 @@ function axionRelease(packageOpts) {
               }
             })
             .then(_.partial(debugAndReturn, `version to be released`, _))
+            .then((ver) => {
+              return jsonFileOperator('package.json', ['version'], ver);
+            })
             // .then(_.partial(_.set, config, `data.version`, _))
             // .then(config => shell.exec(`git tag ${config.data.version}`))
             .then(() => config.data.version);
